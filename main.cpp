@@ -57,6 +57,7 @@ public:
     virtual int returnStatus() const { return 0; }
 };
 
+
 int CheckAuth(const string &login, const string &password) {
     ifstream file("/Users/aki/Desktop/lab-7-8/users.txt");
     string line;
@@ -114,8 +115,7 @@ int main() {
 
     startConsole();
     string login, pass;
-    cin >> login;
-    cin >> pass;
+    cin >> login >> pass;
     int status = CheckAuth(login, pass);
 
     vector<Book> books = loadBooks();
@@ -123,9 +123,11 @@ int main() {
     if (status == -1) {
         cerr << "Неверный логин или пароль. Попробуйте войти ещё раз с помощью команды login " << endl;
 
-    } else {
+    }
+    else {
         cout << "Вы вошли в аккаунт" << endl;
     }
+
     string input;
     cin >> input;
     while (true) {
@@ -134,9 +136,7 @@ int main() {
             if (status == 1) {
                 cout << "Принято. Введите имя, логин и пароль" << endl;
                 string name, new_login, new_pass;
-                cin >> name;
-                cin >> new_login;
-                cin >> new_pass;
+                cin >> name >> new_login >> new_pass;
                 // Проверка логина на существование
                 bool isExist = false;
                 ifstream file("/Users/aki/Desktop/lab-7-8_v2/users.txt");
@@ -259,8 +259,7 @@ int main() {
         else if (input == "login") {
             if (status == -2 || status == -1) {
                 cout << "Введите логин и пароль" << endl;
-                cin >> login;
-                cin >> pass;
+                cin >> login >> pass;
                 status = CheckAuth(login, pass);
 
                 if (status == -1) {
