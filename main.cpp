@@ -2,60 +2,10 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include "Book.h"
+#include "User.h"
 
 using namespace std;
-
-class Book {
-private:
-    string title;
-    string author;
-    string borrowedBy = "";
-    long isbn;
-
-public:
-    Book(const string &title, const string &author, const long isbn) : title(title), author(author), isbn(isbn) {}
-
-    ~Book() {}
-
-    string getTitle() const {
-        return title;
-    }
-
-    string getAuthor() const {
-        return author;
-    }
-
-    long getISBN() const {
-        return isbn;
-    }
-
-    string getBorrowedBy() const {
-        return borrowedBy;
-    }
-
-    void setBorrowBy(const string &login) {
-        borrowedBy = login;
-    }
-
-};
-
-class User {
-protected:
-    string name;
-    string login;
-    string password;
-public:
-    User(const string &name, const string &login, const string &password) : name(name), login(login),
-                                                                            password(password) {}
-
-    string getLogin() const { return login; }
-
-    string getPass() const { return password; }
-
-    string getName() const { return name; }
-
-    virtual int returnStatus() const { return 0; }
-};
 
 
 int CheckAuth(const string &login, const string &password) {
@@ -111,6 +61,39 @@ vector<Book> loadBooks() {
     return books;
 }
 
+vector<User> loadUsers() {
+    vector<User> users = {};
+    ifstream file("/Users/aki/Desktop/lab-7-8/users.txt");
+    string line;
+    while (getline(file, line)) {
+        size_t pos = 0, start;
+        string name, login, password;
+        int status;
+
+        // Имя
+        pos = line.find(';');
+        name = line.substr(0, pos);
+
+        // Login
+        start = pos + 1;
+        pos = line.find(';', start);
+        login = line.substr(start, pos - start);
+
+        // Password
+        start = pos + 1;
+        pos = line.find(';', start);
+        password = line.substr(start, pos - start);
+
+        // Status
+        start = pos + 1;
+        pos = line.find(';', start);
+        status = stoi(line.substr(start, pos - start));
+        users.push_back(User(name, login, password, status));
+    }
+    file.close();
+    return users;
+}
+
 int main() {
 
     startConsole();
@@ -119,12 +102,12 @@ int main() {
     int status = CheckAuth(login, pass);
 
     vector<Book> books = loadBooks();
+    vector<User> users = loadUsers();
 
     if (status == -1) {
         cerr << "Неверный логин или пароль. Попробуйте войти ещё раз с помощью команды login " << endl;
 
-    }
-    else {
+    } else {
         cout << "Вы вошли в аккаунт" << endl;
     }
 
@@ -137,7 +120,6 @@ int main() {
                 cout << "Принято. Введите имя, логин и пароль" << endl;
                 string name, new_login, new_pass;
                 cin >> name >> new_login >> new_pass;
-                // Проверка логина на существование
                 bool isExist = false;
                 ifstream file("/Users/aki/Desktop/lab-7-8_v2/users.txt");
                 string line;
@@ -274,7 +256,7 @@ int main() {
         }
         else if (input == "exit") {
             cout << "До свидания!" << endl;
-            exit(0);
+            break;
 
         }
         else if (input == "whoami") {
@@ -290,24 +272,20 @@ int main() {
         }
         else if (input == "users_list") {
             // Вывод списка пользователей из файла
-            ifstream file("/Users/aki/Desktop/lab-7-8/users.txt");
-            string line;
-            while (getline(file, line)) {
-                size_t pos = line.find(';');
-                string login = line.substr(0, pos);
-                int status = stoi(line.substr(line.size() - 1));
+            for (int i = 0; i < users.size(); ++i) {
+                int status = users[i].getStatus();
                 if (status == 0) {
-                    cout << login << " | Статус: Член библиотеки" << endl;
+                    cout << users[i].getLogin() << " | Статус: Член библиотеки" << endl;
                 } else if (status == 1) {
-                    cout << login << " | Статус: Библиотекарь" << endl;
+                    cout << users[i].getLogin() << " | Статус: Библиотекарь" << endl;
                 }
             }
-            file.close();
-
         }
         else if (input == "add_book") {
             if (status == 1) {
-                string book_name; string author; long isbn;
+                string book_name;
+                string author;
+                long isbn;
                 cin.ignore();
                 cout << "Введите название книги:" << endl;
                 getline(cin, book_name);
@@ -343,20 +321,20 @@ int main() {
         }
         else if (input == "find_by_name") {
             if (status >= 0) {
-            string title;
-            bool founded = false;
-            cout << "Введите название книги" << endl;
-            cin.ignore();
-            getline(cin, title);
-            for (int i = 0; i < books.size(); ++i) {
-                if (books[i].getTitle() == title) {
-                    cout << books[i].getAuthor() << " | " << books[i].getISBN() << endl;
-                    founded = true;
+                string title;
+                bool founded = false;
+                cout << "Введите название книги" << endl;
+                cin.ignore();
+                getline(cin, title);
+                for (int i = 0; i < books.size(); ++i) {
+                    if (books[i].getTitle() == title) {
+                        cout << books[i].getAuthor() << " | " << books[i].getISBN() << endl;
+                        founded = true;
+                    }
                 }
-            }
-            if (!founded)
-                cerr << "Книга не найдена" << endl;
-        } else {
+                if (!founded)
+                    cerr << "Книга не найдена" << endl;
+            } else {
                 cerr << "Вы не вошли в аккаунт. Используйте команду login" << endl;
             }
         }
@@ -376,11 +354,11 @@ int main() {
                 }
                 if (!founded)
                     cerr << "Книга не найдена" << endl;
-            }
-            else{
+            } else {
                 cerr << "Вы не вошли в аккаунт. Используйте команду login" << endl;
             }
-        } else {
+        }
+        else {
             cerr << "Неизвестная команда" << endl;
         }
 
